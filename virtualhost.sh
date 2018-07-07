@@ -83,9 +83,9 @@ if [ "$action" == 'create' ]
 				AllowOverride all
 				Require all granted
 			</Directory>
-			ErrorLog /var/log/apache2/$domain-error.log
+			ErrorLog /var/www/logs/$domain-error.log
 			LogLevel error
-			CustomLog /var/log/apache2/$domain-access.log combined
+			CustomLog /var/www/logs/$domain-access.log combined
 		</VirtualHost>" > $sitesAvailabledomain
 		then
 			echo -e $"There is an ERROR creating $domain file"
