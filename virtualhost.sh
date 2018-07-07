@@ -8,7 +8,7 @@ domain=$2
 rootDir=$3
 owner=$(who am i | awk '{print $1}')
 apacheUser=$(ps -ef | egrep '(httpd|apache2|apache)' | grep -v root | head -n1 | awk '{print $1}')
-email='webmaster@localhost'
+email='doxigo@gmail.com'
 sitesEnabled='/etc/apache2/sites-enabled/'
 sitesAvailable='/etc/apache2/sites-available/'
 userDir='/var/www/'
@@ -34,7 +34,7 @@ do
 done
 
 if [ "$rootDir" == "" ]; then
-	rootDir=${domain//./}
+	rootDir=${domain}
 fi
 
 ### if root dir starts with '/', don't use /var/www as default starting point
@@ -54,18 +54,11 @@ if [ "$action" == 'create' ]
 
 		### check if directory exists or not
 		if ! [ -d $rootDir ]; then
-			### create the directory
-			mkdir $rootDir
+			### create the directory & logs directory
+			mkdir -p $rootDir/public_html
+			mkdir $rootDir/logs
 			### give permission to root dir
 			chmod 755 $rootDir
-			### write test file in the new domain dir
-			if ! echo "<?php echo phpinfo(); ?>" > $rootDir/phpinfo.php
-			then
-				echo $"ERROR: Not able to write in file $rootDir/phpinfo.php. Please check permissions"
-				exit;
-			else
-				echo $"Added content to $rootDir/phpinfo.php"
-			fi
 		fi
 
 		### create virtual host rules file
@@ -74,33 +67,24 @@ if [ "$action" == 'create' ]
 			ServerAdmin $email
 			ServerName $domain
 			ServerAlias $domain
-			DocumentRoot $rootDir
+			DocumentRoot $rootDir/public_html
 			<Directory />
 				AllowOverride All
 			</Directory>
-			<Directory $rootDir>
+			<Directory $rootDir/public_html>
 				Options Indexes FollowSymLinks MultiViews
-				AllowOverride all
+				AllowOverride All
 				Require all granted
 			</Directory>
-			ErrorLog /var/www/logs/$domain-error.log
+			ErrorLog $rootDir/logs/$domain-error.log
 			LogLevel error
-			CustomLog /var/www/logs/$domain-access.log combined
+			CustomLog $rootDir/logs/$domain-access.log combined
 		</VirtualHost>" > $sitesAvailabledomain
 		then
 			echo -e $"There is an ERROR creating $domain file"
 			exit;
 		else
 			echo -e $"\nNew Virtual Host Created\n"
-		fi
-
-		### Add domain in /etc/hosts
-		if ! echo "127.0.0.1	$domain" >> /etc/hosts
-		then
-			echo $"ERROR: Not able to write in /etc/hosts"
-			exit;
-		else
-			echo -e $"Host added to /etc/hosts file \n"
 		fi
 
 		### Add domain in /mnt/c/Windows/System32/drivers/etc/hosts (Windows Subsytem for Linux)
